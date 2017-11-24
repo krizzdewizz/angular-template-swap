@@ -65,11 +65,9 @@ function getInitializer(propAss: ts.PropertyAssignment, doc: vscode.TextDocument
     return { initRange, initContent };
 }
 
-function outlineTemplate(file: string, doc: vscode.TextDocument, builder: vscode.TextEditorEdit): void {
+function outlineTemplate(sourceFile: ts.SourceFile, file: string, doc: vscode.TextDocument, builder: vscode.TextEditorEdit): void {
 
-    const source = createSourceFileFromActiveEditor();
-
-    const propAss = findPropAss(source.sourceFile, 'template');
+    const propAss = findPropAss(sourceFile, 'template');
 
     if (!propAss) {
         return;
@@ -85,11 +83,9 @@ function outlineTemplate(file: string, doc: vscode.TextDocument, builder: vscode
     replacePropAss(propAss, initRange, 'templateUrl', ` '${local}'`, doc, builder);
 }
 
-function inlineTemplate(file: string, doc: vscode.TextDocument, builder: vscode.TextEditorEdit): void {
+function inlineTemplate(sourceFile: ts.SourceFile, file: string, doc: vscode.TextDocument, builder: vscode.TextEditorEdit): void {
 
-    const source = createSourceFileFromActiveEditor();
-
-    const propAss = findPropAss(source.sourceFile, 'templateUrl');
+    const propAss = findPropAss(sourceFile, 'templateUrl');
 
     if (!propAss) {
         return;
@@ -111,8 +107,8 @@ function inlineTemplate(file: string, doc: vscode.TextDocument, builder: vscode.
 
 export function swapTemplate() {
 
-    const ed = vscode.window.activeTextEditor;
-    const doc = ed.document;
+    const { editor, sourceFile } = createSourceFileFromActiveEditor();
+    const doc = editor.document;
     const fileName = doc.fileName;
 
     if (!fileName.endsWith(tsSuffix)) {
@@ -125,11 +121,11 @@ export function swapTemplate() {
     }
 
     try {
-        ed.edit(builder => {
+        editor.edit(builder => {
             if (text.includes(templateUrlPrefix)) {
-                inlineTemplate(fileName, doc, builder);
+                inlineTemplate(sourceFile, fileName, doc, builder);
             } else if (text.includes(templatePrefix)) {
-                outlineTemplate(fileName, doc, builder);
+                outlineTemplate(sourceFile, fileName, doc, builder);
             }
         });
     } catch (err) {
